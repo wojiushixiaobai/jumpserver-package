@@ -1,0 +1,72 @@
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Create tag'
+        required: true
+        default: 'v1.0.0'
+      app_name:
+        description: 'Build repository'
+        required: true
+        default: ''
+      app_version:
+        description: 'Build tag'
+        required: true
+        default: ''
+
+name: Build Wheels
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Create Tag
+        run: |
+          git config --global user.name "actions-user[bot]"
+          git config --global user.email "actions-user[bot]@users.noreply.github.com"
+          git tag -a ${{ github.event.inputs.tag }} -m "Release Version ${{ github.event.inputs.tag }}" || echo "Tag already exists"
+          git push origin ${{ github.event.inputs.tag }} || echo "Tag already exists"
+
+      - name: Create Release
+        run: |
+          gh release create ${{ github.event.inputs.tag }} --notes "Release ${{ github.event.inputs.tag }}" --latest=false || echo "Release already exists"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build:
+    needs: check
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        manylinux: [ manylinux_2_28 ]
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event.inputs.app_name }}
+          ref: ${{ github.event.inputs.app_version }}
+
+      - name: Set up QEMU for multi-arch build
+        uses: docker/setup-qemu-action@v3
+
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v2.21.3
+        env:
+          CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.manylinux }}
+          CIBW_MANYLINUX_AARCH64_IMAGE: ${{ matrix.manylinux }}
+          CIBW_MANYLINUX_PPC64LE_IMAGE: ${{ matrix.manylinux }}
+          CIBW_MANYLINUX_S390X_IMAGE: ${{ matrix.manylinux }}
+          CIBW_PROJECT_REQUIRES_PYTHON: ">=3.11"
+          CIBW_ARCHS_LINUX: x86_64 aarch64 ppc64le s390x
+          CIBW_SKIP: "*musllinux* pp*"
+          CIBW_BEFORE_ALL_LINUX: curl -sSf https://sh.rustup.rs | sh -s -- -y
+          CIBW_ENVIRONMENT_LINUX: "PATH=$HOME/.cargo/bin:$PATH"
+
+      - name: Upload wheels
+        run: |
+          gh release upload ${{ github.event.inputs.tag }} wheelhouse/*.whl -R ${{ github.repository }} --clobber
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
