@@ -8,17 +8,13 @@ on:
       app_name:
         description: 'Build repository'
         required: true
-        default: 'python-ldap/python-ldap'
+        default: 'giampaolo/psutil'
       app_version:
         description: 'Build tag'
         required: true
-        default: 'python-ldap-3.4.3'
-      build_requires:
-        description: 'Build requires'
-        required: true
-        default: 'openldap-devel'
+        default: 'release-5.9.5'
 
-name: cibuildwheel(python-ldap/python-ldap)
+name: cibuildwheel(giampaolo/psutil)
 
 jobs:
   check:
@@ -66,7 +62,8 @@ jobs:
           CIBW_PROJECT_REQUIRES_PYTHON: ">=3.11"
           CIBW_ARCHS_LINUX: x86_64 aarch64 ppc64le s390x
           CIBW_SKIP: "*musllinux* pp*"
-          CIBW_BEFORE_ALL_LINUX: "curl -sSf https://sh.rustup.rs | sh -s -- -y && yum install -y epel-release && yum install -y ${{ github.event.inputs.build_requires }}"
+          CIBW_TEST_SKIP: "*"
+          CIBW_BEFORE_ALL_LINUX: "curl -sSf https://sh.rustup.rs | sh -s -- -y"
           CIBW_ENVIRONMENT_LINUX: "PATH=$HOME/.cargo/bin:$PATH"
 
       - name: Upload wheels
