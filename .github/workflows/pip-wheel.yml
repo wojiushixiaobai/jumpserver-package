@@ -5,16 +5,12 @@ on:
         description: 'Create tag'
         required: true
         default: 'v1.0.0'
-      app_name:
+      url:
         description: 'Build repository'
         required: true
-        default: ''
-      app_version:
-        description: 'Build tag'
-        required: true
-        default: ''
+        default: 'https://github.com/jumpserver/jumpserver/raw/refs/heads/dev/pyproject.toml'
 
-name: CI Build Wheels
+name: Build Wheels
 
 jobs:
   check:
@@ -41,29 +37,24 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        manylinux: [ manylinux_2_28 ]
+        python: [ '3.11' ]
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
-          repository: ${{ github.event.inputs.app_name }}
-          ref: ${{ github.event.inputs.app_version }}
+          python-version: ${{ matrix.python }}
 
-      - name: Set up QEMU for multi-arch build
-        uses: docker/setup-qemu-action@v3
+      - name: Get pyproject.toml
+        run: |
+          wget ${{ github.event.inputs.url }}
+          mkdir -p wheelhouse
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.21.3
-        env:
-          CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.manylinux }}
-          CIBW_MANYLINUX_AARCH64_IMAGE: ${{ matrix.manylinux }}
-          CIBW_MANYLINUX_PPC64LE_IMAGE: ${{ matrix.manylinux }}
-          CIBW_MANYLINUX_S390X_IMAGE: ${{ matrix.manylinux }}
-          CIBW_PROJECT_REQUIRES_PYTHON: ">=3.11"
-          CIBW_ARCHS_LINUX: x86_64 aarch64 ppc64le s390x
-          CIBW_SKIP: "*musllinux* pp*"
-          CIBW_BEFORE_ALL_LINUX: curl -sSf https://sh.rustup.rs | sh -s -- -y
-          CIBW_ENVIRONMENT_LINUX: "PATH=$HOME/.cargo/bin:$PATH"
+        run: |
+          grep -oP '^[a-zA-Z0-9_-]+ = \{ url = "https?://[^"]+.zip"' pyproject.toml | awk -F' = ' '{print $1 ": "$3}' | while IFS=: read -r package url; do
+            echo "Building ${package}"
+            url=$(echo "$url" | tr -d '"')
+            pip wheel --no-deps --wheel-dir wheelhouse ${url}
+          done
 
       - name: Upload wheels
         run: |
