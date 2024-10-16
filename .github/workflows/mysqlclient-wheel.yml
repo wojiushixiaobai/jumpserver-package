@@ -8,17 +8,17 @@ on:
       app_name:
         description: 'Build repository'
         required: true
-        default: 'pymssql/pymssql'
+        default: 'PyMySQL/mysqlclient'
       app_version:
         description: 'Build tag'
         required: true
-        default: 'v2.2.8'
+        default: 'v2.2.4'
       build_requires:
         description: 'Build requires'
         required: true
-        default: 'freetds-devel krb5-devel openssl-devel'
+        default: 'mysql-devel'
 
-name: cibuildwheel(pymssql/pymssql)
+name: cibuildwheel(PyMySQL/mysqlclient)
 
 jobs:
   check:
