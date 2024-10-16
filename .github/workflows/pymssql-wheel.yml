@@ -8,17 +8,17 @@ on:
       app_name:
         description: 'Build repository'
         required: true
-        default: 'python-ldap/python-ldap'
+        default: 'pymssql/pymssql'
       app_version:
         description: 'Build tag'
         required: true
-        default: 'python-ldap-3.4.3'
+        default: 'v2.2.8'
       build_requires:
         description: 'Build requires'
         required: true
-        default: 'openldap-devel'
+        default: 'freetds-devel krb5-devel openssl-devel'
 
-name: cibuildwheel(python-ldap)
+name: cibuildwheel(pymssql)
 
 jobs:
   check:

@@ -13,8 +13,12 @@ on:
         description: 'Build tag'
         required: true
         default: ''
+      build_requires:
+        description: 'Build requires'
+        required: true
+        default: 'curl'
 
-name: CI Build Wheels
+name: cibuildwheel Custom
 
 jobs:
   check:
@@ -62,7 +66,7 @@ jobs:
           CIBW_PROJECT_REQUIRES_PYTHON: ">=3.11"
           CIBW_ARCHS_LINUX: x86_64 aarch64 ppc64le s390x
           CIBW_SKIP: "*musllinux* pp*"
-          CIBW_BEFORE_ALL_LINUX: curl -sSf https://sh.rustup.rs | sh -s -- -y
+          CIBW_BEFORE_ALL_LINUX: "curl -sSf https://sh.rustup.rs | sh -s -- -y && yum install -y epel-release && yum install -y ${{ github.event.inputs.build_requires }}"
           CIBW_ENVIRONMENT_LINUX: "PATH=$HOME/.cargo/bin:$PATH"
 
       - name: Upload wheels

@@ -10,7 +10,7 @@ on:
         required: true
         default: 'https://github.com/jumpserver/jumpserver/raw/refs/heads/dev/pyproject.toml'
 
-name: Build Wheels
+name: wheel Custom
 
 jobs:
   check:
