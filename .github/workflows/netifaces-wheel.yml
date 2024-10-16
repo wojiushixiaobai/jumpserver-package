@@ -13,6 +13,14 @@ on:
         description: 'Build tag'
         required: true
         default: 'release_0_11_0'
+      build_python:
+        description: 'Build python'
+        required: true
+        default: '>=3.11'
+      build_arch:
+        description: 'Build architecture'
+        required: true
+        default: 'x86_64 aarch64'
 
 name: cibuildwheel(al45tair/netifaces)
 
@@ -59,8 +67,8 @@ jobs:
           CIBW_MANYLINUX_AARCH64_IMAGE: ${{ matrix.manylinux }}
           CIBW_MANYLINUX_PPC64LE_IMAGE: ${{ matrix.manylinux }}
           CIBW_MANYLINUX_S390X_IMAGE: ${{ matrix.manylinux }}
-          CIBW_PROJECT_REQUIRES_PYTHON: ">=3.11"
-          CIBW_ARCHS_LINUX: x86_64 aarch64 ppc64le s390x
+          CIBW_PROJECT_REQUIRES_PYTHON: ${{ github.event.inputs.build_python }}
+          CIBW_ARCHS_LINUX: ${{ github.event.inputs.build_arch }}
           CIBW_SKIP: "*musllinux* pp*"
           CIBW_TEST_SKIP: "*"
           CIBW_BEFORE_ALL_LINUX: "curl -sSf https://sh.rustup.rs | sh -s -- -y"
